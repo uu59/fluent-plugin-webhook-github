@@ -1,28 +1,38 @@
 # Fluent::Plugin::Webhook::Github
 
-TODO: Write a gem description
+fluentd input plugin for incoming webhook from GitHub.
+
+(Work in progress. I don't recommend to use this in production)
 
 ## Installation
-
-Add this line to your application's Gemfile:
-
-    gem 'fluent-plugin-webhook-github'
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
 
     $ gem install fluent-plugin-webhook-github
 
 ## Usage
 
-TODO: Write usage instructions here
+```
+<source>
+  type webhook_github
+  tag gh
+
+  # optional (values are default)
+  bind 0.0.0.0
+  port 8080
+  mount /
+</source>
+
+<match gh.*>
+  type stdout
+</match>
+
+<match gh.pull_request>
+  type hipchat
+</match>
+```
 
 ## Contributing
 
-1. Fork it ( https://github.com/[my-github-username]/fluent-plugin-webhook-github/fork )
+1. Fork it ( https://github.com/uu59/fluent-plugin-webhook-github/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)

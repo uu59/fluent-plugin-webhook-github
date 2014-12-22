@@ -21,6 +21,7 @@ fluentd input plugin for incoming webhook from GitHub.
   bind 0.0.0.0
   port 8080
   mount /
+  with_payload false
 </source>
 
 <match gh.*>

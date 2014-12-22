@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["k@uu59.org"]
   spec.summary       = %q{fluentd input plugin for receive GitHub webhook}
   spec.description   = %q{fluentd input plugin for receive GitHub webhook}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/uu59/fluent-plugin-webhook-github"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0")

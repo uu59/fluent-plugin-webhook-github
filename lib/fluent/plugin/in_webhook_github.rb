@@ -4,6 +4,7 @@ require "thread"
 require "json"
 require 'fluent/process'
 require 'openssl'
+require 'secure_compare'
 
 module Fluent
   class WebhookGithubInput < Input
@@ -58,7 +59,7 @@ module Fluent
     def verify_signature(req)
       return true unless @secret
       sig = 'sha1='+OpenSSL::HMAC.hexdigest(HMAC_DIGEST, @secret, req.body)
-      sig == req.header["x-hub-signature"].first
+      SecureCompare.compare(sig, req.header["x-hub-signature"].first)
     end
 
     def process(event, payload)

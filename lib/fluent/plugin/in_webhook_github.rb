@@ -17,6 +17,7 @@ module Fluent
     config_param :port, :integer, :default => 8080
     config_param :mount, :string, :default => "/"
     config_param :secret, :string, :default => nil
+    config_param :with_payload, :bool, :default => false
 
     def start
       @thread = Thread.new(&method(:run))
@@ -85,9 +86,14 @@ module Fluent
           :user  => payload["comment"] && payload["comment"]["user"]["login"],
           :body  => payload["comment"] && payload["comment"]["body"],
         }
+      else
+        {}
       end
+
       if content
         content[:origin] = "github"
+        content[:event]  = event
+        content[:payload] = payload if @with_payload
         $log.info "tag: #{@tag.dup}.#{event}, event:#{event}, content:#{content}"
         Engine.emit("#{@tag.dup}.#{event}", Engine.now, content) if content
       else

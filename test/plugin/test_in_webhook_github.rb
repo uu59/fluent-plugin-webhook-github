@@ -34,6 +34,7 @@ class GithubWebhookInputTest < Test::Unit::TestCase
     Fluent::Engine.now = time
 
     d.expect_emit "gwebhook.issue", time, {
+      :event  => 'issue',
       :url    => 'http://',
       :title  => 'tttt',
       :user   => 'Ore',
@@ -74,6 +75,7 @@ class GithubWebhookInputTest < Test::Unit::TestCase
     Fluent::Engine.now = time
 
     d.expect_emit "gwebhook.issue", time, {
+      :event  => 'issue',
       :url    => nil,
       :title  => nil,
       :user   => nil,
@@ -96,6 +98,65 @@ class GithubWebhookInputTest < Test::Unit::TestCase
       assert_equal "401", res.code
     end
   end
+
+  def test_with_payload
+    d = create_driver(CONFIG + %[
+      with_payload true
+    ])
+
+    time = Time.parse("2011-01-02 13:14:15 UTC").to_i
+    Fluent::Engine.now = time
+
+    payload = {
+      'issue' => {
+        'html_url' => 'http://',
+        'title'    => 'tttt',
+        'user'     => {
+          'login' => 'Ore',
+        },
+      },
+      'comment' => {
+        'body' => 'Karada',
+      }
+    }
+
+    d.expect_emit "gwebhook.issue", time, {
+      :event   => 'issue',
+      :url     => 'http://',
+      :title   => 'tttt',
+      :user    => 'Ore',
+      :body    => 'Karada',
+      :origin  => 'github',
+      :payload => payload
+    }
+
+    payload_delete = {
+      'ref'         => 'simple-tag',
+      'ref_type'    => 'tag',
+      'pusher_type' => 'user',
+      'repository'  => {},
+      'sender'      => {
+        'login' => 'baxterthehacker',
+        'id'    => 6752317,
+      },
+    }
+
+    d.expect_emit "gwebhook.delete", time, {
+      :event   => 'delete',
+      :origin  => 'github',
+      :payload => payload_delete,
+    }
+
+    d.run do
+      d.expected_emits.each {|tag, time, record|
+        res = post("/", record[:payload].to_json, {
+          'x-github-event' => record[:event],
+        })
+        assert_equal "204", res.code
+      }
+    end
+  end
+
 
   def post(path, params, header = {})
     http = Net::HTTP.new("127.0.0.1", PORT)

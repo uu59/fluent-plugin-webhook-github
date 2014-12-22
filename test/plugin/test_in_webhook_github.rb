@@ -89,6 +89,11 @@ class GithubWebhookInputTest < Test::Unit::TestCase
         })
         assert_equal "204", res.code
       }
+      res = post("/", '{"hoge":"fuga"}', {
+        'x-github-event'  => 'issue',
+        'x-hub-signature' => 'sha1=5ea783ea13c9feef6dbb9c8c805450e2ba1fb0c0-dummy',
+      })
+      assert_equal "401", res.code
     end
   end
 

@@ -40,10 +40,13 @@ module Fluent
         begin
           $log.debug req.header
 
-          if verify_signature(req)
-            payload = JSON.parse(req.body || "{}")
+          if req.request_method != "POST"
+            res.status = 405
+          elsif verify_signature(req)
+            payload = JSON.parse(req.body)
             event = req.header["x-github-event"].first
-            process(event, payload)
+            guid  = req.header["x-github-delivery"].first
+            process(event, payload, guid)
             res.status = 204
           else
             res.status = 401
@@ -59,12 +62,15 @@ module Fluent
 
     def verify_signature(req)
       return true unless @secret
+      return false unless req.body
       sig = 'sha1='+OpenSSL::HMAC.hexdigest(HMAC_DIGEST, @secret, req.body)
       SecureCompare.compare(sig, req.header["x-hub-signature"].first)
     end
 
-    def process(event, payload)
+    def process(event, payload, guid)
       content = case event
+      when nil
+        nil
       when "issue", "issue_comment"
         {
           :url   => payload["issue"] && payload["issue"]["html_url"],
@@ -93,6 +99,7 @@ module Fluent
       if content
         content[:origin] = "github"
         content[:event]  = event
+        content[:guid]   = guid if guid
         content[:payload] = payload if @with_payload
         $log.info "tag: #{@tag.dup}.#{event}, event:#{event}, content:#{content}"
         Engine.emit("#{@tag.dup}.#{event}", Engine.now, content) if content

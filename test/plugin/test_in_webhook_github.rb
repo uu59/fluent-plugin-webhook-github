@@ -40,6 +40,7 @@ class GithubWebhookInputTest < Test::Unit::TestCase
       :user   => 'Ore',
       :body   => 'Karada',
       :origin => 'github',
+      :guid   => 'gggg',
     }
 
     payload = {
@@ -58,7 +59,8 @@ class GithubWebhookInputTest < Test::Unit::TestCase
     d.run do
       d.expected_emits.each {|tag, time, record|
         res = post("/", payload.to_json, {
-          'x-github-event' => 'issue',
+          'x-github-event'    => 'issue',
+          'x-github-delivery' => 'gggg',
         })
         assert_equal "204", res.code
       }
@@ -81,6 +83,7 @@ class GithubWebhookInputTest < Test::Unit::TestCase
       :user   => nil,
       :body   => nil,
       :origin => 'github',
+      :guid   => 'gggg',
     }
 
     d.run do
@@ -88,6 +91,7 @@ class GithubWebhookInputTest < Test::Unit::TestCase
         res = post("/", '{"hoge":"fuga"}', {
           'x-github-event'  => 'issue',
           'x-hub-signature' => 'sha1=5ea783ea13c9feef6dbb9c8c805450e2ba1fb0c0',
+          'x-github-delivery' => 'gggg',
         })
         assert_equal "204", res.code
       }
@@ -157,6 +161,15 @@ class GithubWebhookInputTest < Test::Unit::TestCase
     end
   end
 
+  def test_405
+    create_driver.run do
+      http = Net::HTTP.new("127.0.0.1", PORT)
+      req = Net::HTTP::Get.new('/')
+      res = http.request(req)
+
+      assert_equal "405", res.code
+    end
+  end
 
   def post(path, params, header = {})
     http = Net::HTTP.new("127.0.0.1", PORT)

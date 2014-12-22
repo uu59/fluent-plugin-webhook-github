@@ -22,18 +22,19 @@ module Fluent
     end
 
     def shutdown
+      @server.shutdown
       Thread.kill(@thread)
     end
 
     HMAC_DIGEST = OpenSSL::Digest.new('sha1')
 
     def run
-      server = WEBrick::HTTPServer.new(
+      @server = WEBrick::HTTPServer.new(
         :BindAddress => @bind,
         :Port => @port,
       )
       $log.debug "Listen on http://#{@bind}:#{@port}#{@mount}"
-      server.mount_proc(@mount) do |req, res|
+      @server.mount_proc(@mount) do |req, res|
         begin
           $log.debug req.header
 
@@ -51,7 +52,7 @@ module Fluent
           res.status = 400
         end
       end
-      server.start
+      @server.start
     end
 
     def verify_signature(req)

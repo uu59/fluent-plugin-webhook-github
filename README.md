@@ -15,6 +15,8 @@ fluentd input plugin for incoming webhook from GitHub.
   type webhook_github
   tag gh
 
+  secret THE_SECRET_STRING_YOU_SET # the hook's secret. optional, but strongly recommended.
+
   # optional (values are default)
   bind 0.0.0.0
   port 8080
